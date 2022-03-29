@@ -16,7 +16,6 @@
 #include <utility>
 
 #include "head_tracking/HeadController.hpp"
-#include "head_tracking/PIDController.hpp"
 
 #include "head_tracking_msgs/msg/pan_tilt_command.hpp"
 #include "control_msgs/msg/joint_trajectory_controller_state.hpp"
@@ -33,16 +32,11 @@ using namespace std::chrono_literals;
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 HeadController::HeadController()
-: LifecycleNode("head_tracker"),
-  pan_pid_(0.0, 1.0, 0.0, 0.3),
-  tilt_pid_(0.0, 1.0, 0.0, 0.3)
+: LifecycleNode("head_tracker")
 {
   command_sub_ = create_subscription<head_tracking_msgs::msg::PanTiltCommand>(
     "command", 100,
     std::bind(&HeadController::command_callback, this, _1));
-  joint_sub_ = create_subscription<control_msgs::msg::JointTrajectoryControllerState>(
-    "joint_state", rclcpp::SensorDataQoS(),
-    std::bind(&HeadController::joint_state_callback, this, _1));
   joint_pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>("joint_command", 100);
 }
 
@@ -50,9 +44,6 @@ CallbackReturn
 HeadController::on_configure(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(get_logger(), "HeadController configured");
-
-  pan_pid_.set_pid(0.4, 0.05, 0.55);
-  tilt_pid_.set_pid(0.4, 0.05, 0.55);
 
   return CallbackReturn::SUCCESS;
 }
@@ -75,7 +66,7 @@ HeadController::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 
   trajectory_msgs::msg::JointTrajectory command_msg;
   command_msg.header.stamp = now();
-  command_msg.joint_names = last_state_->joint_names;
+  command_msg.joint_names = {"head_1_joint", "head_2_joint"};
   command_msg.points.resize(1);
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);
@@ -97,13 +88,6 @@ HeadController::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 }
 
 void
-HeadController::joint_state_callback(
-  control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg)
-{
-  last_state_ = std::move(msg);
-}
-
-void
 HeadController::command_callback(head_tracking_msgs::msg::PanTiltCommand::UniquePtr msg)
 {
   last_command_ = std::move(msg);
@@ -113,11 +97,9 @@ HeadController::command_callback(head_tracking_msgs::msg::PanTiltCommand::Unique
 void
 HeadController::control_sycle()
 {
-  if (last_state_ == nullptr) {return;}
-
   trajectory_msgs::msg::JointTrajectory command_msg;
   command_msg.header.stamp = now();
-  command_msg.joint_names = last_state_->joint_names;
+  command_msg.joint_names = {"head_1_joint", "head_2_joint"};
   command_msg.points.resize(1);
   command_msg.points[0].positions.resize(2);
   command_msg.points[0].velocities.resize(2);
@@ -133,8 +115,8 @@ HeadController::control_sycle()
     command_msg.points[0].accelerations[1] = 0.1;
     command_msg.points[0].time_from_start = rclcpp::Duration(1s);
   } else {
-    double control_pan = pan_pid_.get_output(last_command_->pan);
-    double control_tilt = tilt_pid_.get_output(last_command_->tilt);
+    double control_pan = last_command_->pan;
+    double control_tilt = last_command_->tilt;
 
     command_msg.points[0].positions[0] = control_pan;
     command_msg.points[0].positions[1] = control_tilt;

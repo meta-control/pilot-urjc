@@ -34,7 +34,6 @@ include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED
   src/head_tracking/HeadController.cpp
-  src/head_tracking/PIDController.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
@@ -52,8 +51,8 @@ install(TARGETS
 )
 
 install(
-  DIRECTORY include
-  DESTINATION include
+  DIRECTORY include/
+  DESTINATION include/
 )
 
 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})

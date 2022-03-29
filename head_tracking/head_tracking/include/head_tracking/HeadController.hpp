@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef BR2_TRACKING__HEADCONTROLLER_HPP_
-#define BR2_TRACKING__HEADCONTROLLER_HPP_
+#ifndef HEAD_TRACKING__HEADCONTROLLER_HPP_
+#define HEAD_TRACKING__HEADCONTROLLER_HPP_
 
 #include <memory>
 
 #include "head_tracking_msgs/msg/pan_tilt_command.hpp"
 #include "control_msgs/msg/joint_trajectory_controller_state.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
-
-#include "head_tracking/PIDController.hpp"
 
 #include "image_transport/image_transport.hpp"
 
@@ -44,23 +42,18 @@ public:
 
   void control_sycle();
 
-  void joint_state_callback(control_msgs::msg::JointTrajectoryControllerState::UniquePtr msg);
   void command_callback(head_tracking_msgs::msg::PanTiltCommand::UniquePtr msg);
 
 private:
   rclcpp::Subscription<head_tracking_msgs::msg::PanTiltCommand>::SharedPtr command_sub_;
-  rclcpp::Subscription<control_msgs::msg::JointTrajectoryControllerState>::SharedPtr joint_sub_;
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr
     joint_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
-  control_msgs::msg::JointTrajectoryControllerState::UniquePtr last_state_;
   head_tracking_msgs::msg::PanTiltCommand::UniquePtr last_command_;
   rclcpp::Time last_command_ts_;
-
-  PIDController pan_pid_, tilt_pid_;
 };
 
 }  // namespace head_tracking
 
-#endif  // BR2_TRACKING__HEADCONTROLLER_HPP_
+#endif  // HEAD_TRACKING__HEADCONTROLLER_HPP_

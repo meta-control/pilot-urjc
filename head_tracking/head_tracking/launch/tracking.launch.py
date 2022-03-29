@@ -30,7 +30,7 @@ def generate_launch_description():
 
     object_tracker_cmd = Node(
         package='head_tracking',
-        executable='object_tracker',
+        executable='head_tracker',
         parameters=[{
           'use_sim_time': True
         }, params_file],
