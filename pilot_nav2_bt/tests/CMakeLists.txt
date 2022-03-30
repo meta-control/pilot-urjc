@@ -1,0 +1,3 @@
+ament_add_gtest(bt_nav2_test bt_nav2_test.cpp)
+ament_target_dependencies(bt_nav2_test ${dependencies})
+target_link_libraries(bt_nav2_test path_point_at_bt_node)
